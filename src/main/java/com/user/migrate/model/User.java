@@ -2,6 +2,7 @@ package com.user.migrate.model;
 
 import java.util.Date;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -34,7 +35,11 @@ public class User {
 	private String email;
 	private String phone;
 	private String country;
+	
+	@Column(columnDefinition="MEDIUMTEXT")
 	private String profile;
+	
+	private String profileName;
 	
 	@JsonFormat(pattern = "yyyy-MM-dd")
     private Date dob;
