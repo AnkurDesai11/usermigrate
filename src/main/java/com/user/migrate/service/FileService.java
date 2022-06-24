@@ -8,7 +8,11 @@ import org.springframework.web.multipart.MultipartFile;
 
 public interface FileService {
 	
-	String uploadImage(String path, MultipartFile file) throws IOException;
+	String uploadImageFileSystem(String path, MultipartFile file) throws IOException;
+	
+	String uploadFileCloud(String username, MultipartFile file);
+	
+	String uploadImageDatabase(MultipartFile file) throws IOException;
 	
 	InputStream downloadImage(String path, String filename) throws FileNotFoundException;
 	

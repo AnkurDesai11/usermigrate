@@ -1,15 +1,23 @@
 package com.user.migrate.service;
 
-import com.user.migrate.model.User;
+import java.util.List;
+
+import org.springframework.web.multipart.MultipartFile;
+
+import com.user.migrate.dto.UserDto;
 
 public interface UserService {
 	
-	public User createUser(User user) throws Exception;
-
-	public User getUser(String username);
-
-	public void deleteUser(Long userId);
+	public UserDto createUser(UserDto userDto,  MultipartFile profile) throws Exception;
 	
-	public User updateUser(User user) throws Exception;
+	public String createUsers(List<UserDto> usersToMigrate);
+
+	public UserDto getUser(String username) throws Exception;
+	
+	public List<UserDto> getUsers();
+	
+	public UserDto updateUser(UserDto userDto) throws Exception;
+	
+	public String deleteUser(String username);
 	
 }
