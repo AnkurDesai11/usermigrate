@@ -1,5 +1,7 @@
 package com.user.migrate.controller;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -39,30 +41,37 @@ public class MigrationController {
 			return new ResponseEntity<>(this.userService.createUser(userDto, profile),HttpStatus.CREATED);
 		}
 		
+		//creating users
+		@PostMapping(value = "/import/")
+		public ResponseEntity<?> createUsers(@RequestBody List<UserDto> users) throws Exception {
+			return new ResponseEntity<>(this.userService.createUsers(users),HttpStatus.CREATED);
+		}
+		
 		//read this user
 		@GetMapping("/{username}")
 		public ResponseEntity<?> getUser(@PathVariable("username") String username) throws Exception {
-			System.out.println(username);
 			return new ResponseEntity<>(this.userService.getUser(username),HttpStatus.OK);
 		}
 		
 		//read all users
 		@GetMapping("/")
-		public ResponseEntity<UserDto> getUsers(@PathVariable("username") String username) throws Exception {
-			return new ResponseEntity<>(this.userService.getUser(username),HttpStatus.OK);
+		public ResponseEntity<List<UserDto>> getUsers() throws Exception {
+			return new ResponseEntity<>(this.userService.getUsers(),HttpStatus.OK);
 		}
 		
 		//update user by username
-		@PutMapping("/")
-		public ResponseEntity<UserDto> updateUser(@RequestBody UserDto userDto) throws Exception {
-			return new ResponseEntity<>(this.userService.updateUser(userDto),HttpStatus.OK);
+		@PutMapping(value = "/", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+		public ResponseEntity<UserDto> updateUser(@RequestPart(value = "profile",required = false) MultipartFile profile, @RequestPart(value="user") String userString) throws Exception {
+			ObjectMapper mapper = new ObjectMapper();
+			UserDto userDto = mapper.readValue(userString, UserDto.class);
+			return new ResponseEntity<>(this.userService.updateUser(userDto, profile),HttpStatus.OK);
 		}
 		
 		//delete user by userId
 		@DeleteMapping("/{username}")
 		public ResponseEntity<ApiResponse> deleteUser(@PathVariable("username") String username) {
 			String result = this.userService.deleteUser(username);
-			if(result == "Successfully Deleted")
+			if(result == "Delete Successful")
 				return new ResponseEntity<>(new ApiResponse(result, true), HttpStatus.OK);
 			else
 				return new ResponseEntity<>(new ApiResponse(result, false), HttpStatus.INTERNAL_SERVER_ERROR);
