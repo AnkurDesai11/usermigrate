@@ -34,7 +34,7 @@ public class UserServiceImpl implements UserService{
 	private BCryptPasswordEncoder passwordEncoder;
 	//creating user
 	@Override
-	public UserDto createUser(UserDto userDto,MultipartFile profile) throws UserFoundException{
+	public UserDto createUser(UserDto userDto, MultipartFile profile) throws UserFoundException{
 		// TODO Auto-generated method stub
 		//return null;
 		User user = this.modelMapper.map(userDto, User.class);
@@ -54,12 +54,12 @@ public class UserServiceImpl implements UserService{
 			//create user
 			user.setPassword(this.passwordEncoder.encode(user.getPassword()));
 			if (!profile.isEmpty()){ 
-				user.setProfile(this.fileService.uploadFileCloud(userDto.getUsername(), profile));
 				user.setProfileName(profile.getOriginalFilename());
+				user.setProfile(this.fileService.uploadFileCloud(userDto.getUsername(), profile));
 			}
 			else {
-				user.setProfile("default.png");
 				user.setProfileName("default.png");
+				user.setProfile("default.png");
 			}
 			localUser = this.userRepository.save(user);
 			localUser.setPassword(null);
@@ -71,18 +71,32 @@ public class UserServiceImpl implements UserService{
 	@Override
 	public UserDto getUser(String username) throws ResourceNotFoundException{
 		User user = this.userRepository.findByUsername(username);//.orElseThrow(()->new ResourceNotFoundException("user", "username", username));
-		if (user == null)
+		if (user == null) {
 			throw new ResourceNotFoundException("user", "username", username);
-		else
+		}
+		else {
+			user.setPassword(null);
 			return this.modelMapper.map(user, UserDto.class);
+		}
 	}
 	
 	//delete user by userId
 	@Override
 	public String deleteUser(String username) {
 		try {
-			this.userRepository.deleteById(this.userRepository.findByUsername(username).getId());
-			return "Successfully Deleted";
+			User user = this.userRepository.findByUsername(username);
+			if (user.getProfile() == "default.png") {
+				this.userRepository.deleteById(user.getId());
+				return "Delete successful";
+			}
+			else {
+				if(this.fileService.deleteFileCloud(user.getProfile())) {
+					this.userRepository.deleteById(user.getId());
+					return "Delete Successful";
+				}
+			}
+			
+			return "Delete failed";
 		}catch(Exception e) {
 			StringWriter sw = new StringWriter();
 			PrintWriter pw = new PrintWriter(sw);
@@ -93,22 +107,34 @@ public class UserServiceImpl implements UserService{
 
 	//update user by username
 	@Override
-	public UserDto updateUser(UserDto userDto) throws ResourceNotFoundException {
+	public UserDto updateUser(UserDto userDto, MultipartFile profile) throws Exception {
 		// TODO Auto-generated method stub
 		
 		User localUser = this.userRepository.findByUsername(userDto.getUsername());
-		
+		User updatedUser = new User();
 		if(localUser==null) {
 			System.out.println("User does not exist in database");
-			throw new ResourceNotFoundException("User", "email", userDto.getEmail());
+			throw new ResourceNotFoundException("User", "username", userDto.getUsername());
 		}
 		else {
-			localUser.setPassword(this.passwordEncoder.encode(userDto.getPassword()));
-			localUser.setProfile(userDto.getProfile());
-			localUser.setFirstName(userDto.getFirstName());
-			localUser.setLastName(userDto.getLastName());
+			updatedUser = this.modelMapper.map(userDto, User.class);
+			updatedUser.setId(localUser.getId());
+			updatedUser.setPassword(this.passwordEncoder.encode(updatedUser.getPassword()));
+			if (!profile.isEmpty()){
+				if(localUser.getProfile()!="default.png")
+					this.fileService.deleteFileCloud(localUser.getProfile());
+				updatedUser.setProfileName(profile.getOriginalFilename());
+				updatedUser.setProfile(this.fileService.uploadFileCloud(userDto.getUsername(), profile));
+			}
+			else {
+				updatedUser.setProfileName(localUser.getProfileName());
+				updatedUser.setProfile(localUser.getProfile());
+			}
+//			localUser.setPassword(this.passwordEncoder.encode(userDto.getPassword()));
+//			localUser.setFirstName(userDto.getFirstName());
+//			localUser.setLastName(userDto.getLastName());
 		}
-		User updatedUser = this.userRepository.save(localUser);
+		updatedUser = this.userRepository.save(updatedUser);
 		updatedUser.setPassword("");
 		return this.modelMapper.map(updatedUser, UserDto.class);
 	}
@@ -116,7 +142,7 @@ public class UserServiceImpl implements UserService{
 	@Override
 	public String createUsers(List<UserDto> usersToMigrate) {
 		// TODO Auto-generated method stub
-		return null;
+		return "Done";
 	}
 
 	@Override

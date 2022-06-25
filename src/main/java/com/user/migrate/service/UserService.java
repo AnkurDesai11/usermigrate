@@ -8,7 +8,7 @@ import com.user.migrate.dto.UserDto;
 
 public interface UserService {
 	
-	public UserDto createUser(UserDto userDto,  MultipartFile profile) throws Exception;
+	public UserDto createUser(UserDto userDto, MultipartFile profile) throws Exception;
 	
 	public String createUsers(List<UserDto> usersToMigrate);
 
@@ -16,7 +16,7 @@ public interface UserService {
 	
 	public List<UserDto> getUsers();
 	
-	public UserDto updateUser(UserDto userDto) throws Exception;
+	public UserDto updateUser(UserDto userDto, MultipartFile profile) throws Exception;
 	
 	public String deleteUser(String username);
 	

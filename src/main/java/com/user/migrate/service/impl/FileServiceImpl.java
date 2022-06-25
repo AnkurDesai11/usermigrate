@@ -27,6 +27,8 @@ public class FileServiceImpl implements FileService{
 	
 	@Value("${aws.s3.bucketName}")
 	private String bucketName;
+	@Value("${aws.region}")
+	private String regionName;
 
 	@Override
 	public String uploadImageFileSystem(String path, MultipartFile file) throws IOException {
@@ -49,7 +51,7 @@ public class FileServiceImpl implements FileService{
 	@Override
 	public String uploadFileCloud(String username, MultipartFile file) {
 		
-		String fileName = ("8v74tq34ht4q3tq5q4T45Gw45gW"+username).hashCode()+file.getOriginalFilename();
+		String fileName = ("8v74tq34ht4q3tq5q4T45Gw45gW"+username.replace(" ", "_")).hashCode()+file.getOriginalFilename().replace(" ", "_");
 		try {
 			amazonS3.putObject(new PutObjectRequest(bucketName, fileName, file.getInputStream(), null).withCannedAcl(CannedAccessControlList.PublicRead));
 		} catch (IOException e) {
@@ -57,7 +59,7 @@ public class FileServiceImpl implements FileService{
 			e.printStackTrace();
 			fileName = "Error while uploading file";
 		}
-		return fileName;
+		return "https://"+bucketName+".s3."+regionName+".amazonaws.com/"+fileName;
 	}
 
 	@Override
@@ -80,6 +82,19 @@ public class FileServiceImpl implements FileService{
 	        return "Error while encoding file";
 	    }
 		
+	}
+
+	@Override
+	public Boolean deleteFileCloud(String url) throws Exception {
+		String[] arr = url.split("/");
+		try {
+			amazonS3.deleteObject(bucketName, arr[arr.length-1]);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			return false;
+		}
+		return true;
 	}
 	
 }

@@ -12,6 +12,8 @@ public interface FileService {
 	
 	String uploadFileCloud(String username, MultipartFile file);
 	
+	Boolean deleteFileCloud(String url) throws Exception;
+	
 	String uploadImageDatabase(MultipartFile file) throws IOException;
 	
 	InputStream downloadImage(String path, String filename) throws FileNotFoundException;
