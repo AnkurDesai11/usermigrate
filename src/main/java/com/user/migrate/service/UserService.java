@@ -4,13 +4,14 @@ import java.util.List;
 
 import org.springframework.web.multipart.MultipartFile;
 
+import com.user.migrate.dto.ApiResponse;
 import com.user.migrate.dto.UserDto;
 
 public interface UserService {
 	
 	public UserDto createUser(UserDto userDto, MultipartFile profile) throws Exception;
 	
-	public String createUsers(List<UserDto> usersToMigrate);
+	public ApiResponse createUsers(List<UserDto> usersToMigrate) throws Exception;
 
 	public UserDto getUser(String username) throws Exception;
 	

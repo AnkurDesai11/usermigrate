@@ -24,7 +24,6 @@ import com.user.migrate.dto.UserDto;
 import com.user.migrate.service.UserService;
 
 
-
 @RestController
 @RequestMapping("/source1/api/users")
 @CrossOrigin("*")
@@ -33,7 +32,7 @@ public class MigrationController {
 		@Autowired
 		private UserService userService;
 		
-		//creating user
+		//create user
 		@PostMapping(value = "/", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
 		public ResponseEntity<UserDto> createUser(@RequestPart(value = "profile",required = false) MultipartFile profile, @RequestPart(value="user") String userString) throws Exception {
 			ObjectMapper mapper = new ObjectMapper();
@@ -41,19 +40,19 @@ public class MigrationController {
 			return new ResponseEntity<>(this.userService.createUser(userDto, profile),HttpStatus.CREATED);
 		}
 		
-		//creating users
-		@PostMapping(value = "/import/")
-		public ResponseEntity<?> createUsers(@RequestBody List<UserDto> users) throws Exception {
-			return new ResponseEntity<>(this.userService.createUsers(users),HttpStatus.CREATED);
+		//create multiple users
+		@PostMapping(value = "/import")
+		public ResponseEntity<?> createUsers(@RequestBody List<UserDto> usersDto) throws Exception {
+			return new ResponseEntity<>(this.userService.createUsers(usersDto), HttpStatus.OK);
 		}
 		
-		//read this user
+		//read user
 		@GetMapping("/{username}")
 		public ResponseEntity<?> getUser(@PathVariable("username") String username) throws Exception {
 			return new ResponseEntity<>(this.userService.getUser(username),HttpStatus.OK);
 		}
 		
-		//read all users
+		//read multiple users
 		@GetMapping("/")
 		public ResponseEntity<List<UserDto>> getUsers() throws Exception {
 			return new ResponseEntity<>(this.userService.getUsers(),HttpStatus.OK);
@@ -67,14 +66,14 @@ public class MigrationController {
 			return new ResponseEntity<>(this.userService.updateUser(userDto, profile),HttpStatus.OK);
 		}
 		
-		//delete user by userId
+		//delete user by username
 		@DeleteMapping("/{username}")
 		public ResponseEntity<ApiResponse> deleteUser(@PathVariable("username") String username) {
 			String result = this.userService.deleteUser(username);
 			if(result == "Delete Successful")
-				return new ResponseEntity<>(new ApiResponse(result, true), HttpStatus.OK);
+				return new ResponseEntity<>(new ApiResponse(result, "true", null), HttpStatus.OK);
 			else
-				return new ResponseEntity<>(new ApiResponse(result, false), HttpStatus.INTERNAL_SERVER_ERROR);
+				return new ResponseEntity<>(new ApiResponse(result, "false", null), HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 		
 }

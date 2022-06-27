@@ -13,14 +13,14 @@ public class GlobalExceptionHandler {
 	@ExceptionHandler(ResourceNotFoundException.class)
 	public ResponseEntity<ApiResponse> resourceNotFoundExceptionHandler(ResourceNotFoundException ex){
 		String message = ex.getMessage();
-		ApiResponse apiResponse = new ApiResponse(message, false);
+		ApiResponse apiResponse = new ApiResponse(message, "false", null);
 		return new ResponseEntity<ApiResponse>(apiResponse, HttpStatus.NOT_FOUND);
 	}
 	
 	@ExceptionHandler(UserFoundException.class)
 	public ResponseEntity<ApiResponse> userFoundExceptionHandler(UserFoundException ex){
 		String message = ex.getMessage();
-		ApiResponse apiResponse = new ApiResponse(message, false);
+		ApiResponse apiResponse = new ApiResponse(message, "false", null);
 		return new ResponseEntity<ApiResponse>(apiResponse, HttpStatus.CONFLICT);
 	}
 	
