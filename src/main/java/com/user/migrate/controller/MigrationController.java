@@ -1,6 +1,10 @@
 package com.user.migrate.controller;
 
 import java.util.List;
+import java.util.Set;
+
+import javax.validation.ConstraintViolation;
+import javax.validation.Validator;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -22,6 +26,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.user.migrate.dto.ApiResponse;
 import com.user.migrate.dto.UserDto;
 import com.user.migrate.service.UserService;
+import com.user.migrate.util.DtoValidationException;
 
 
 @RestController
@@ -32,11 +37,18 @@ public class MigrationController {
 		@Autowired
 		private UserService userService;
 		
+		@Autowired
+		private Validator validator;
+		
 		//create user
 		@PostMapping(value = "/", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-		public ResponseEntity<UserDto> createUser(@RequestPart(value = "profile",required = false) MultipartFile profile, @RequestPart(value="user") String userString) throws Exception {
+		public ResponseEntity<?> createUser(@RequestPart(value = "profile",required = false) MultipartFile profile, @RequestPart(value="user") String userString) throws Exception {
 			ObjectMapper mapper = new ObjectMapper();
 			UserDto userDto = mapper.readValue(userString, UserDto.class);
+			Set<ConstraintViolation<UserDto>> violations = validator.validate(userDto);
+			System.out.println(violations);
+			if(!violations.isEmpty())
+				throw new DtoValidationException(violations, userDto);
 			return new ResponseEntity<>(this.userService.createUser(userDto, profile),HttpStatus.CREATED);
 		}
 		
@@ -60,7 +72,7 @@ public class MigrationController {
 		
 		//update user by username
 		@PutMapping(value = "/", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-		public ResponseEntity<UserDto> updateUser(@RequestPart(value = "profile",required = false) MultipartFile profile, @RequestPart(value="user") String userString) throws Exception {
+		public ResponseEntity<?> updateUser(@RequestPart(value = "profile",required = false) MultipartFile profile, @RequestPart(value="user") String userString) throws Exception {
 			ObjectMapper mapper = new ObjectMapper();
 			UserDto userDto = mapper.readValue(userString, UserDto.class);
 			return new ResponseEntity<>(this.userService.updateUser(userDto, profile),HttpStatus.OK);
@@ -71,9 +83,9 @@ public class MigrationController {
 		public ResponseEntity<ApiResponse> deleteUser(@PathVariable("username") String username) {
 			String result = this.userService.deleteUser(username);
 			if(result == "Delete Successful")
-				return new ResponseEntity<>(new ApiResponse(result, "true", null), HttpStatus.OK);
+				return new ResponseEntity<>(new ApiResponse(result, "true", null, null), HttpStatus.OK);
 			else
-				return new ResponseEntity<>(new ApiResponse(result, "false", null), HttpStatus.INTERNAL_SERVER_ERROR);
+				return new ResponseEntity<>(new ApiResponse(result, "false", null, null), HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 		
 }
