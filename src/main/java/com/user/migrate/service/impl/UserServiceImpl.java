@@ -4,6 +4,10 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Set;
+
+import javax.validation.ConstraintViolation;
+import javax.validation.Validator;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,6 +35,9 @@ public class UserServiceImpl implements UserService {
 
 	@Autowired
 	private ModelMapper modelMapper;
+	
+	@Autowired
+	private Validator validator;
 
 	@Autowired
 	private BCryptPasswordEncoder passwordEncoder;
@@ -70,7 +77,8 @@ public class UserServiceImpl implements UserService {
 	@Override
 	public ApiResponse createUsers(List<UserDto> usersToMigrate) {
 //		List <User> usersToSave = new ArrayList<User>();
-		HashMap<String, String> responseMap = new HashMap<String, String>();
+		HashMap<String, HashMap<Integer, String>> responseMap = new HashMap<>();
+		HashMap<String, UserDto> users = new HashMap<>();
 		String status = "true";
 //		try {
 //			usersToSave = usersToMigrate.stream()
@@ -83,28 +91,42 @@ public class UserServiceImpl implements UserService {
 //			//usersToSave.stream().collect(Collectors.toMap(User::getUsername, "true")));
 //		}catch(Exception e) {
 		for (UserDto userDto : usersToMigrate) {
+			HashMap<Integer, String> errors = new HashMap<>();
+			int i = 0;
 			try {
+				Set<ConstraintViolation<UserDto>> violations = validator.validate(userDto);
+				for(ConstraintViolation<UserDto> error : violations){
+					int fieldName = ++i;
+					String message = error.getPropertyPath().toString()+" : "+error.getMessage().toString();
+					errors.put(fieldName, message);
+				}
 				User currentUser = this.modelMapper.map(userDto, User.class);
 				User localUsername = this.userRepository.findByUsername(currentUser.getUsername());
 				User localUsermail = this.userRepository.findByEmail(currentUser.getEmail());
-
+				
 				if (localUsername != null) {
 					status = "partial";
-					responseMap.put(currentUser.getUsername(), "false - username already exists");
+					errors.put(++i, "username : username already exists");
 				} else if (localUsermail != null) {
 					status = "partial";
-					responseMap.put(currentUser.getUsername(), "false - email already exists");
+					errors.put(++i, "email : email already exists");
 				} else {
-					this.userRepository.save(currentUser);
-					responseMap.put(currentUser.getUsername(), "true");
+					UserDto savedUser = this.modelMapper.map(this.userRepository.save(currentUser), UserDto.class);
+					savedUser.setPassword(null);
+					users.put(userDto.getUsername(),savedUser);
 				}
 			} catch (Exception ee) {
 				status = "partial";
-				responseMap.put(userDto.getUsername(), "Error in parsing and saving user");
+				errors.put(++i, "Error in parsing and saving user");
 			}
+			responseMap.put(userDto.getUsername(), errors);
 		}
-		return new ApiResponse(status == "true" ? "All records entered sucessfully" : "Failed to import some records",
-				status, responseMap);
+		
+		return new ApiResponse(
+				status == "true" ? "All records entered sucessfully" : 
+					users.isEmpty()?"Failed to import all records":"Failed to import some records",
+				users.isEmpty()?"false":status, 
+				users, responseMap);
 //	}
 	}
 

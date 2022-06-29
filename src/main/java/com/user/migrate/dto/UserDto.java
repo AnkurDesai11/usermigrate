@@ -3,7 +3,10 @@ package com.user.migrate.dto;
 import java.util.Date;
 
 import javax.validation.constraints.Email;
-import javax.validation.constraints.NotNull;
+import javax.validation.constraints.NotEmpty;
+import javax.validation.constraints.Pattern;
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -16,24 +19,26 @@ import lombok.Setter;
 @AllArgsConstructor
 @Getter
 @Setter
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class UserDto {
 	
 	//private Long id;
 	
-	@NotNull
+	@NotEmpty(message = "Username cannot be empty")
+	@Pattern(regexp = "^[A-Za-z0-9]+$", message = "Username must be alphanumeric")
 	private String username;
 	
-	@NotNull
+	@NotEmpty(message = "Password cannot be empty")
 	private String password;
 	
 	private String firstName;
 	
 	private String lastName;
 	
-	@Email
+	@Email(message = "Email must be valid")
 	private String email;
 	
-	@NotNull
+	@NotEmpty(message = "Phone cannot be empty")
 	private String phone;
 	
 	private String country;

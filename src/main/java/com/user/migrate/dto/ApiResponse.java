@@ -14,5 +14,6 @@ import lombok.Setter;
 public class ApiResponse {
 	private String message;
 	private String success;
-	private HashMap<String, String> entries;
+	private HashMap<String, UserDto> usersAdded;
+	private HashMap<String, HashMap<Integer,String>> errors;
 }
