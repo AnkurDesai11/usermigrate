@@ -1,5 +1,6 @@
 package com.user.migrate.controller;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 
@@ -18,6 +19,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
@@ -49,7 +51,8 @@ public class MigrationController {
 			System.out.println(violations);
 			if(!violations.isEmpty())
 				throw new DtoValidationException(violations, userDto);
-			return new ResponseEntity<>(this.userService.createUser(userDto, profile),HttpStatus.CREATED);
+			UserDto savedUserDto = this.userService.createUser(userDto, profile);
+			return new ResponseEntity<>(new ApiResponse("user created", "true", new HashMap <String, UserDto>(){{ put(savedUserDto.getUsername(), savedUserDto); }}, null) ,HttpStatus.CREATED);
 		}
 		
 		//create multiple users
@@ -66,8 +69,8 @@ public class MigrationController {
 		
 		//read multiple users
 		@GetMapping("/")
-		public ResponseEntity<List<UserDto>> getUsers() throws Exception {
-			return new ResponseEntity<>(this.userService.getUsers(),HttpStatus.OK);
+		public ResponseEntity<?> getUsers(@RequestParam(value="pageNumber", defaultValue = "0", required = false) Integer pageNumber, @RequestParam(value="pageSize", defaultValue = "5", required = false) Integer pageSize) throws Exception {
+			return new ResponseEntity<>(this.userService.getUsers(pageNumber, pageSize),HttpStatus.OK);
 		}
 		
 		//update user by username
@@ -75,7 +78,11 @@ public class MigrationController {
 		public ResponseEntity<?> updateUser(@RequestPart(value = "profile",required = false) MultipartFile profile, @RequestPart(value="user") String userString) throws Exception {
 			ObjectMapper mapper = new ObjectMapper();
 			UserDto userDto = mapper.readValue(userString, UserDto.class);
-			return new ResponseEntity<>(this.userService.updateUser(userDto, profile),HttpStatus.OK);
+			Set<ConstraintViolation<UserDto>> violations = validator.validate(userDto);
+			if(!violations.isEmpty())
+				throw new DtoValidationException(violations, userDto);
+			UserDto updatedUserDto = this.userService.updateUser(userDto, profile);
+			return new ResponseEntity<>(new ApiResponse("user updated", "true", new HashMap <String, UserDto>(){{ put(updatedUserDto.getUsername(), updatedUserDto); }}, null) ,HttpStatus.OK);
 		}
 		
 		//delete user by username
