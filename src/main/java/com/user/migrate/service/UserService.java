@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.user.migrate.dto.ApiResponse;
+import com.user.migrate.dto.PagedUsersResponse;
 import com.user.migrate.dto.UserDto;
 
 public interface UserService {
@@ -15,7 +16,7 @@ public interface UserService {
 
 	public UserDto getUser(String username) throws Exception;
 	
-	public List<UserDto> getUsers();
+	public PagedUsersResponse getUsers(Integer pageNumber, Integer pageSize);
 	
 	public UserDto updateUser(UserDto userDto, MultipartFile profile) throws Exception;
 	

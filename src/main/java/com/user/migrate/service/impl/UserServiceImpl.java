@@ -5,17 +5,22 @@ import java.io.StringWriter;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.validation.ConstraintViolation;
 import javax.validation.Validator;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.user.migrate.dto.ApiResponse;
+import com.user.migrate.dto.PagedUsersResponse;
 import com.user.migrate.dto.UserDto;
 import com.user.migrate.model.User;
 import com.user.migrate.repo.UserRepository;
@@ -69,7 +74,7 @@ public class UserServiceImpl implements UserService {
 				user.setProfile("default.png");
 			}
 			localUser = this.userRepository.save(user);
-			localUser.setPassword(null);
+			localUser.setPassword("");
 		}
 		return this.modelMapper.map(localUser, UserDto.class);
 	}
@@ -112,7 +117,7 @@ public class UserServiceImpl implements UserService {
 					errors.put(++i, "email : email already exists");
 				} else {
 					UserDto savedUser = this.modelMapper.map(this.userRepository.save(currentUser), UserDto.class);
-					savedUser.setPassword(null);
+					savedUser.setPassword("");
 					users.put(userDto.getUsername(),savedUser);
 				}
 			} catch (Exception ee) {
@@ -139,15 +144,30 @@ public class UserServiceImpl implements UserService {
 		if (user == null) {
 			throw new ResourceNotFoundException("user", "username", username);
 		} else {
-			user.setPassword(null);
+			user.setPassword("");
 			return this.modelMapper.map(user, UserDto.class);
 		}
 	}
 
 	@Override
-	public List<UserDto> getUsers() {
+	public PagedUsersResponse getUsers(Integer pageNumber, Integer pageSize) {
 		// TODO Auto-generated method stub
-		return null;
+		Pageable pageInfo = PageRequest.of(pageNumber, pageSize);
+		Page<User> usersPage = this.userRepository.findAll(pageInfo);
+		List<User> pagedUsers = usersPage.getContent();
+		List<UserDto> content = pagedUsers.stream().map(user -> {
+				user.setPassword("");
+				return this.modelMapper.map(user, UserDto.class);
+			}
+		).collect(Collectors.toList());
+		PagedUsersResponse pagedUsersResponse = new PagedUsersResponse();
+		pagedUsersResponse.setContent(content);
+		pagedUsersResponse.setPageNumber(usersPage.getNumber());
+		pagedUsersResponse.setPageSize(usersPage.getSize());
+		pagedUsersResponse.setTotalElements(usersPage.getTotalElements());
+		pagedUsersResponse.setTotalPages(usersPage.getTotalPages());
+		pagedUsersResponse.setLastPage(usersPage.isLast());
+		return pagedUsersResponse;
 	}
 
 	// update user by username
