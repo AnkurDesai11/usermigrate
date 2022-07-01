@@ -28,6 +28,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.user.migrate.dto.ApiResponse;
 import com.user.migrate.dto.UserDto;
 import com.user.migrate.service.UserService;
+import com.user.migrate.util.AppConstantsConfig;
 import com.user.migrate.util.DtoValidationException;
 
 
@@ -69,8 +70,13 @@ public class MigrationController {
 		
 		//read multiple users
 		@GetMapping("/")
-		public ResponseEntity<?> getUsers(@RequestParam(value="pageNumber", defaultValue = "0", required = false) Integer pageNumber, @RequestParam(value="pageSize", defaultValue = "5", required = false) Integer pageSize) throws Exception {
-			return new ResponseEntity<>(this.userService.getUsers(pageNumber, pageSize),HttpStatus.OK);
+		public ResponseEntity<?> getUsers(@RequestParam(value="pageNumber", defaultValue = AppConstantsConfig.PAGE_NUMBER, required = false) Integer pageNumber, 
+										  @RequestParam(value="pageSize", defaultValue = AppConstantsConfig.PAGE_SIZE, required = false) Integer pageSize,
+										  @RequestParam(value="pageSortBy", defaultValue = AppConstantsConfig.SORT_BY, required = false) String pageSortBy,
+										  @RequestParam(value="pageSortDir", defaultValue = AppConstantsConfig.SORT_DIRECTION, required = false) String pageSortDir,
+										  @RequestParam(value="keyword", defaultValue = AppConstantsConfig.KEYWORD, required = false) String keyword,
+										  @RequestParam(value="field", defaultValue = AppConstantsConfig.FIELD, required = false) String field) throws Exception {
+			return new ResponseEntity<>(this.userService.getUsers(pageNumber, pageSize, pageSortBy, pageSortDir, keyword, field),HttpStatus.OK);
 		}
 		
 		//update user by username
@@ -88,11 +94,11 @@ public class MigrationController {
 		//delete user by username
 		@DeleteMapping("/{username}")
 		public ResponseEntity<ApiResponse> deleteUser(@PathVariable("username") String username) {
-			String result = this.userService.deleteUser(username);
-			if(result == "Delete Successful")
-				return new ResponseEntity<>(new ApiResponse(result, "true", null, null), HttpStatus.OK);
+			ApiResponse result = this.userService.deleteUser(username);
+			if(result.getSuccess() == "true")
+				return new ResponseEntity<>(result, HttpStatus.OK);
 			else
-				return new ResponseEntity<>(new ApiResponse(result, "false", null, null), HttpStatus.INTERNAL_SERVER_ERROR);
+				return new ResponseEntity<>(result, HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 		
 }

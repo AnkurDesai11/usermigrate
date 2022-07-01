@@ -16,10 +16,10 @@ public interface UserService {
 
 	public UserDto getUser(String username) throws Exception;
 	
-	public PagedUsersResponse getUsers(Integer pageNumber, Integer pageSize);
+	public PagedUsersResponse getUsers(Integer pageNumber, Integer pageSize, String pageSortBy, String pageSortDir, String keyword, String field);
 	
 	public UserDto updateUser(UserDto userDto, MultipartFile profile) throws Exception;
 	
-	public String deleteUser(String username);
+	public ApiResponse deleteUser(String username);
 	
 }

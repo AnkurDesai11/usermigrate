@@ -15,6 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -150,10 +151,31 @@ public class UserServiceImpl implements UserService {
 	}
 
 	@Override
-	public PagedUsersResponse getUsers(Integer pageNumber, Integer pageSize) {
+	public PagedUsersResponse getUsers(Integer pageNumber, Integer pageSize, String pageSortBy, String pageSortDir, String keyword, String field) {
 		// TODO Auto-generated method stub
-		Pageable pageInfo = PageRequest.of(pageNumber, pageSize);
-		Page<User> usersPage = this.userRepository.findAll(pageInfo);
+		Sort sort = pageSortDir.equalsIgnoreCase("dsc")?Sort.by(pageSortBy).descending():Sort.by(pageSortBy).ascending();
+		Pageable pageInfo = PageRequest.of(pageNumber, pageSize, sort);
+		Page<User> usersPage;
+		System.out.println(keyword+","+field);
+		switch(field) {
+		  case "username":
+			  usersPage = this.userRepository.findByUsername("%"+keyword+"%", pageInfo);
+		    break;
+		  case "country":
+			  usersPage = this.userRepository.findByCountry("%"+keyword+"%", pageInfo);
+		    break;
+		  case "email":
+			  usersPage = this.userRepository.findByEmail("%"+keyword+"%", pageInfo);
+			  break;
+		  case "profile":
+			  usersPage = this.userRepository.findByProfile("%"+keyword+"%", pageInfo);
+			  break;
+		  default:
+			  usersPage = this.userRepository.findAll(pageInfo);
+		}
+
+		
+		//Page<User> usersPage = this.userRepository.findAll(pageInfo);
 		List<User> pagedUsers = usersPage.getContent();
 		List<UserDto> content = pagedUsers.stream().map(user -> {
 				user.setPassword("");
@@ -204,25 +226,42 @@ public class UserServiceImpl implements UserService {
 
 	// delete user by userId
 	@Override
-	public String deleteUser(String username) {
+	public ApiResponse deleteUser(String username) {
 		try {
 			User user = this.userRepository.findByUsername(username);
 			if (user.getProfile() == "default.png") {
 				this.userRepository.deleteById(user.getId());
-				return "Delete successful";
+				return new ApiResponse("Delete Successful", "true", 
+						new HashMap<String, UserDto>(){{ put(username, null); }} ,
+						null);
 			} else {
 				if (this.fileService.deleteFileCloud(user.getProfile())) {
 					this.userRepository.deleteById(user.getId());
-					return "Delete Successful";
+					return new ApiResponse("Delete Successful", "true",
+							new HashMap<String, UserDto>(){{ put(username, null); }} ,
+							null);
+				}
+				else {
+					return new ApiResponse("Delete Failed", "false", null,
+							new HashMap<String, HashMap<Integer, String>>() 
+								{{ put(username, 
+										new HashMap<Integer, String>()
+											{{ put(1, "Unable to delete user profile from cloud"); }} 
+										); }}
+						);
 				}
 			}
-
-			return "Delete failed";
 		} catch (Exception e) {
 			StringWriter sw = new StringWriter();
 			PrintWriter pw = new PrintWriter(sw);
 			e.printStackTrace(pw);
-			return "Failed - " + sw.toString();
+			return new ApiResponse("Delete Failed", "false", null,
+					new HashMap<String, HashMap<Integer, String>>() 
+						{{ put(username, 
+								new HashMap<Integer, String>()
+									{{ put(1, sw.toString()); }} 
+								); }}
+				);
 		}
 	}
 
