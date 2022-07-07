@@ -226,9 +226,10 @@ public class UserServiceImpl implements UserService {
 
 	// delete user by userId
 	@Override
-	public ApiResponse deleteUser(String username) {
+	public ApiResponse deleteUser(String username) throws Exception {
+		User user;
 		try {
-			User user = this.userRepository.findByUsername(username);
+			user = this.userRepository.findByUsername(username);
 			if (user.getProfile() == "default.png") {
 				this.userRepository.deleteById(user.getId());
 				return new ApiResponse("Delete Successful", "true", 
@@ -251,10 +252,14 @@ public class UserServiceImpl implements UserService {
 						);
 				}
 			}
+		} catch (NullPointerException n) {
+			System.out.println("in null");
+			throw new ResourceNotFoundException("user", "username", username);
 		} catch (Exception e) {
 			StringWriter sw = new StringWriter();
 			PrintWriter pw = new PrintWriter(sw);
 			e.printStackTrace(pw);
+			System.out.println(e.getLocalizedMessage());
 			return new ApiResponse("Delete Failed", "false", null,
 					new HashMap<String, HashMap<Integer, String>>() 
 						{{ put(username, 

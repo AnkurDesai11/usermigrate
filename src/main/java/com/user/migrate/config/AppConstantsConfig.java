@@ -1,4 +1,4 @@
-package com.user.migrate.util;
+package com.user.migrate.config;
 
 public class AppConstantsConfig {
 

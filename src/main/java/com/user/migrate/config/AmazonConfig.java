@@ -1,4 +1,4 @@
-package com.user.migrate.util;
+package com.user.migrate.config;
 import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.auth.BasicAWSCredentials;

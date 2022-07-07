@@ -20,6 +20,6 @@ public interface UserService {
 	
 	public UserDto updateUser(UserDto userDto, MultipartFile profile) throws Exception;
 	
-	public ApiResponse deleteUser(String username);
+	public ApiResponse deleteUser(String username) throws Exception;
 	
 }

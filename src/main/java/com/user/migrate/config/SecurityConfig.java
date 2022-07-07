@@ -1,4 +1,4 @@
-package com.user.migrate.util;
+package com.user.migrate.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
